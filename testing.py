@@ -3,7 +3,7 @@ import json
 import sys
 
 # Your Google API key (same key can be used if Web Risk is enabled for your project)
-API_KEY = "AIzaSyB6vzz-SpCUVzB5nXdx9Mjag6Wg6cCH3Ok"
+API_KEY = ""
 ENDPOINT = f"https://webrisk.googleapis.com/v1/uris:search?key={API_KEY}"
 
 def check_url(url_to_check):
@@ -50,3 +50,4 @@ if __name__ == "__main__":
         if u.lower() == "exit" or u == "":
             sys.exit(0)
         check_url(u)
+
