@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Phishing Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .profile-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .profile-header {
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .profile-header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .profile-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .profile-sections {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .profile-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .profile-card h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .info-value {
+            color: #2c3e50;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-item:hover {
+            transform: translateY(-3px);
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .account-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .action-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .primary-btn {
+            background: #3498db;
+            color: white;
+        }
+        
+        .primary-btn:hover {
+            background: #2980b9;
+        }
+        
+        .secondary-btn {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .secondary-btn:hover {
+            background: #e9ecef;
+        }
+        
+        .danger-btn {
+            background: #ffeaea;
+            color: #e74c3c;
+            border: 1px solid #fadbd8;
+        }
+        
+        .danger-btn:hover {
+            background: #fadbd8;
+        }
+        
+        .recent-scans {
+            margin-top: 20px;
+        }
+        
+        .scan-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: background 0.3s ease;
+        }
+        
+        .scan-item:hover {
+            background: #e9ecef;
+        }
+        
+        .scan-url {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-right: 15px;
+        }
+        
+        .scan-result {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .result-danger {
+            background: #ffeaea;
+            color: #e74c3c;
+        }
+        
+        .result-success {
+            background: #e8f7ef;
+            color: #27ae60;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #7f8c8d;
+        }
+        
+        .empty-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <!-- 1. USER INFORMATION SECTION -->
+        <div class="profile-header">
+            <h1>👤 User Profile</h1>
+            <p>Manage your account and view your statistics</p>
+        </div>
+        
+        <div class="profile-sections">
+            <!-- User Information Card -->
+            <div class="profile-card">
+                <h2>📋 Account Information</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Username:</span>
+                        <span class="info-value">{{ user_data.username }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email:</span>
+                        <span class="info-value">{{ user_data.email }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Account Created:</span>
+                        <span class="info-value">{{ user_data.created_at.strftime('%B %d, %Y') }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Last Login:</span>
+                        <span class="info-value">
+                            {% if user_data.last_login %}
+                                {{ user_data.last_login.strftime('%B %d, %Y %H:%M') }}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Account Status:</span>
+                        <span class="info-value" style="color: #27ae60;">✅ Active</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 2. USER STATISTICS SECTION -->
+            <div class="profile-card">
+                <h2>📊 Your Statistics</h2>
+                <div class="stats-grid">
+                    {% if scan_history %}
+                        {% set total_scans = scan_history|length %}
+                        {% set phishing_count = scan_history|selectattr('is_phishing')|list|length %}
+                        {% set safe_count = total_scans - phishing_count %}
+                        {% set success_rate = (phishing_count / total_scans * 100)|round(1) if total_scans > 0 else 0 %}
+                        
+                        <div class="stat-item">
+                            <div class="stat-value">{{ total_scans }}</div>
+                            <div class="stat-label">Total Scans</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #e74c3c;">{{ phishing_count }}</div>
+                            <div class="stat-label">Phishing Detected</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #27ae60;">{{ safe_count }}</div>
+                            <div class="stat-label">Safe Websites</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #3498db;">{{ success_rate }}%</div>
+                            <div class="stat-label">Detection Rate</div>
+                        </div>
+                    {% else %}
+                        <div class="empty-state" style="grid-column: span 2;">
+                            <div class="empty-icon">📊</div>
+                            <p>No scan statistics available yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- 3. ACCOUNT MANAGEMENT SECTION -->
+                <div class="account-actions">
+                    <h3 style="margin-top: 30px; margin-bottom: 15px;">🔧 Account Management</h3>
+                    
+                    <a href="{{ url_for('dashboard') }}" class="action-btn primary-btn">
+                        🚀 Go to Dashboard
+                    </a>
+                    
+                    <a href="{{ url_for('scan_history') }}" class="action-btn secondary-btn">
+                        📋 View Scan History
+                    </a>
+                    
+                    <button class="action-btn secondary-btn" onclick="showChangePassword()">
+                        🔒 Change Password
+                    </button>
+                    
+                    <button class="action-btn danger-btn" onclick="showDeleteConfirm()">
+                        🗑️ Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 4. RECENT SCAN HISTORY SECTION -->
+        <div class="profile-card">
+            <h2>🕒 Recent Scan History</h2>
+            <div class="recent-scans">
+                {% if scan_history %}
+                    {% for scan in scan_history[:5] %}
+                    <div class="scan-item">
+                        <div class="scan-url" title="{{ scan.url }}">
+                            {{ scan.url|truncate(50) }}
+                        </div>
+                        <div class="scan-result {% if scan.is_phishing %}result-danger{% else %}result-success{% endif %}">
+                            {% if scan.is_phishing %}⚠️ Phishing{% else %}✅ Safe{% endif %}
+                        </div>
+                        <small style="color: #666; margin-left: 10px;">
+                            {{ scan.created_at.strftime('%m/%d') }}
+                        </small>
+                    </div>
+                    {% endfor %}
+                    
+                    {% if scan_history|length > 5 %}
+                    <div style="text-align: center; margin-top: 15px;">
+                        <a href="{{ url_for('scan_history') }}" class="action-btn secondary-btn" style="padding: 8px 15px;">
+                            View All Scans ({{ scan_history|length }} total)
+                        </a>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">🔍</div>
+                        <h3>No Scan History Yet</h3>
+                        <p>You haven't scanned any URLs yet.</p>
+                        <a href="{{ url_for('dashboard') }}" class="action-btn primary-btn" style="margin-top: 15px;">
+                            Start Your First Scan
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="navigation">
+            <a href="{{ url_for('dashboard') }}" class="action-btn secondary-btn">
+                ← Back to Dashboard
+            </a>
+            
+            <a href="{{ url_for('logout') }}" class="action-btn secondary-btn">
+                🚪 Logout
+            </a>
+        </div>
+    </div>
+    
+    <!-- Modals for account actions -->
+    <!-- Change Password Modal -->
+<div id="changePasswordModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 400px;">
+        <h3>🔒 Change Password</h3>
+        <form id="changePasswordForm">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Current Password</label>
+                <input type="password" id="currentPassword" required 
+                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">New Password</label>
+                <input type="password" id="newPassword" required 
+                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Confirm New Password</label>
+                <input type="password" id="confirmPassword" required 
+                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+            </div>
+            <div id="passwordError" style="color: #e74c3c; margin-bottom: 15px; display: none;"></div>
+            <div id="passwordSuccess" style="color: #27ae60; margin-bottom: 15px; display: none;"></div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" onclick="hideChangePassword()" class="action-btn secondary-btn">Cancel</button>
+                <button type="submit" class="action-btn primary-btn">Change Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+    
+    <!-- Delete Account Modal -->
+<div id="deleteAccountModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 400px;">
+        <h3 style="color: #e74c3c;">⚠️ Delete Account</h3>
+        <p style="color: #666; margin-bottom: 15px;"><strong>Warning:</strong> This action is permanent and cannot be undone!</p>
+        
+        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+            <p style="margin: 0; color: #856404;">
+                <strong>⚠️ What will be deleted:</strong><br>
+                • Your account credentials<br>
+                • All your scan history ({{ scan_history|length }} scans)<br>
+                • All your personal data
+            </p>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #e74c3c;">
+                Type "DELETE" to confirm:
+            </label>
+            <input type="text" id="deleteConfirmation" 
+                   placeholder="Type DELETE here"
+                   style="width: 100%; padding: 10px; border: 1px solid #e74c3c; border-radius: 5px;"
+                   autocomplete="off">
+        </div>
+        
+        <div id="deleteError" style="color: #e74c3c; margin-bottom: 15px; display: none;"></div>
+        
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button type="button" onclick="hideDeleteConfirm()" class="action-btn secondary-btn">Cancel</button>
+            <button type="button" onclick="confirmDeleteAccount()" class="action-btn danger-btn" id="deleteConfirmBtn" disabled>
+                🗑️ Delete Account
+            </button>
+        </div>
+    </div>
+</div>
+  <script>
+// ========== CHANGE PASSWORD FUNCTIONS ==========
+function showChangePassword() {
+    document.getElementById('changePasswordModal').style.display = 'flex';
+}
+
+function hideChangePassword() {
+    document.getElementById('changePasswordModal').style.display = 'none';
+}
+
+function changePassword(event) {
+    event.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const errorDiv = document.getElementById('passwordError');
+    const successDiv = document.getElementById('passwordSuccess');
+    
+    // Clear previous messages
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    
+    // Validate
+    if (newPassword !== confirmPassword) {
+        errorDiv.textContent = 'New passwords do not match';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        errorDiv.textContent = 'Password must be at least 6 characters';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    // Send request
+    fetch('/change-password', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            current_password: currentPassword,
+            new_password: newPassword,
+            confirm_password: confirmPassword
+        })
+    })
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(data) {
+        if (data.success) {
+            successDiv.textContent = data.message || 'Password changed successfully!';
+            successDiv.style.display = 'block';
+            
+            // Clear form
+            document.getElementById('changePasswordForm').reset();
+            
+            // Close modal after 2 seconds
+            setTimeout(function() {
+                hideChangePassword();
+            }, 2000);
+        } else {
+            errorDiv.textContent = data.error || 'Error changing password';
+            errorDiv.style.display = 'block';
+        }
+    })
+    .catch(function(error) {
+        errorDiv.textContent = 'Network error. Please try again.';
+        errorDiv.style.display = 'block';
+    });
+}
+
+// ========== DELETE ACCOUNT FUNCTIONS ==========
+function showDeleteConfirm() {
+    document.getElementById('deleteAccountModal').style.display = 'flex';
+    document.getElementById('deleteConfirmation').value = '';
+    document.getElementById('deleteConfirmBtn').disabled = true;
+    document.getElementById('deleteError').style.display = 'none';
+    
+    // Focus on confirmation input
+    setTimeout(function() {
+        var input = document.getElementById('deleteConfirmation');
+        if (input) input.focus();
+    }, 100);
+}
+
+function hideDeleteConfirm() {
+    document.getElementById('deleteAccountModal').style.display = 'none';
+}
+
+function confirmDeleteAccount() {
+    var confirmation = document.getElementById('deleteConfirmation').value;
+    var errorDiv = document.getElementById('deleteError');
+    var deleteBtn = document.getElementById('deleteConfirmBtn');
+    
+    if (confirmation !== 'DELETE') {
+        errorDiv.textContent = 'You must type "DELETE" to confirm';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    // Disable button during request
+    deleteBtn.disabled = true;
+    deleteBtn.innerHTML = '⏳ Deleting...';
+    
+    // Send delete request
+    fetch('/delete-account', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(data) {
+        if (data.success) {
+            // Show success message
+            errorDiv.style.color = '#27ae60';
+            errorDiv.textContent = data.message;
+            errorDiv.style.display = 'block';
+            
+            // Redirect to landing page after 2 seconds
+            setTimeout(function() {
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    window.location.href = '/';
+                }
+            }, 2000);
+        } else {
+            // Show error
+            errorDiv.style.color = '#e74c3c';
+            errorDiv.textContent = 'Error: ' + data.error;
+            errorDiv.style.display = 'block';
+            
+            // Re-enable button
+            deleteBtn.disabled = false;
+            deleteBtn.innerHTML = '🗑️ Delete Account';
+        }
+    })
+    .catch(function(error) {
+        errorDiv.textContent = 'Network error. Please try again.';
+        errorDiv.style.display = 'block';
+        
+        // Re-enable button
+        deleteBtn.disabled = false;
+        deleteBtn.innerHTML = '🗑️ Delete Account';
+    });
+}
+
+// ========== INITIALIZE WHEN PAGE LOADS ==========
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Setup change password form
+    var form = document.getElementById('changePasswordForm');
+    if (form) {
+        form.addEventListener('submit', changePassword);
+    }
+    
+    // 2. Setup delete confirmation input listener
+    var deleteInput = document.getElementById('deleteConfirmation');
+    var deleteBtn = document.getElementById('deleteConfirmBtn');
+    
+    if (deleteInput && deleteBtn) {
+        deleteInput.addEventListener('input', function() {
+            deleteBtn.disabled = this.value !== 'DELETE';
+        });
+    }
+    
+    // 3. Update the delete account button onclick
+    var deleteAccountBtn = document.querySelector('button[onclick="showDeleteConfirm()"]');
+    if (deleteAccountBtn) {
+        deleteAccountBtn.onclick = showDeleteConfirm;
+    }
+    
+    // 4. Update the confirm delete button onclick
+    var confirmDeleteBtn = document.getElementById('deleteConfirmBtn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.onclick = confirmDeleteAccount;
+    }
+});
+
+// ========== MODAL CLOSE FUNCTIONS ==========
+// Close modals when clicking outside
+document.addEventListener('click', function(event) {
+    var passwordModal = document.getElementById('changePasswordModal');
+    var deleteModal = document.getElementById('deleteAccountModal');
+    
+    if (event.target === passwordModal) {
+        hideChangePassword();
+    }
+    if (event.target === deleteModal) {
+        hideDeleteConfirm();
+    }
+});
+
+// Close modals with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        hideChangePassword();
+        hideDeleteConfirm();
+    }
+});
+</script>  
+   
+</body>
+</html>

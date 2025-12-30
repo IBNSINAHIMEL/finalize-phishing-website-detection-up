@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Shield - Threat Intelligence & Phishing Defense</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* --- Dark Mode (Default) --- */
+            --bg-body: #0f172a; /* Deep Navy */
+            --bg-card: #1e293b; /* Slate Blue Card */
+            --primary: #06b6d4; /* Cyan */
+            --primary-glow: rgba(6, 182, 212, 0.4);
+            --secondary: #8b5cf6; /* Violet */
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --border: rgba(148, 163, 184, 0.1);
+            --bg-input: rgba(0,0,0,0.2);
+            --text-contrast: #0f172a; /* Used for text on primary buttons */
+        }
+
+        /* --- Light Mode --- */
+        body.light-mode {
+            --bg-body: #f8f9fa;
+            --bg-card: #ffffff;
+            --primary: #0284c7; /* Darker blue for contrast */
+            --primary-glow: rgba(2, 132, 199, 0.4);
+            --secondary: #6366f1; /* Indigo */
+            --text-main: #1f2937;
+            --text-muted: #64748b;
+            --success: #059669;
+            --danger: #dc2626;
+            --border: #e5e7eb;
+            --bg-input: #f1f5f9;
+            --text-contrast: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column; /* Changed to column for footer placement */
+            align-items: center;
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--bg-body), var(--bg-body)),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px),
+                linear-gradient(var(--border) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Decorative glowing orb in background */
+        .glow-orb {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--secondary) 0%, transparent 70%);
+            opacity: 0.15;
+            filter: blur(80px);
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: -1;
+            animation: pulse-glow 10s infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            0% { opacity: 0.1; transform: translateX(-50%) scale(1); }
+            100% { opacity: 0.2; transform: translateX(-50%) scale(1.1); }
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 1100px;
+            padding: 20px;
+            z-index: 1;
+            flex-grow: 1; /* Allows main content to push footer down */
+        }
+
+        /* --- NEW: Top Controls Area --- */
+        .top-controls {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .theme-toggle {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        /* End NEW: Top Controls Area */
+
+        /* Header Section */
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 20px;
+            color: var(--primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--text-main) 0%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+             background-clip: text;
+             color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        /* Cards Generic Style */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: var(--primary-glow);
+            transform: translateY(-2px);
+        }
+
+        /* Scanner / IP Section */
+        .scanner-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scanner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+
+        .scanner-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--success);
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink { 50% { opacity: 0.5; } }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .data-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            color: var(--primary);
+            font-weight: 500;
+            background: var(--bg-input);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 2px solid var(--primary);
+            transition: border-left-color 0.3s, background 0.3s;
+        }
+
+        .value.loading {
+            color: var(--text-muted);
+            font-style: italic;
+            border-left-color: var(--text-muted);
+        }
+
+        /* Scanning Line Animation */
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            animation: scan 3s linear infinite;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        @keyframes scan {
+            0% { top: 0; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        /* Action Section (Right Side) */
+        .actions-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--text-contrast);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: #22d3ee;
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* --- MODIFIED: Create Account Button with Hover Effect --- */
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            position: relative;
+            overflow: hidden;
+            height: 56px; /* Fixed height for animation */
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            background: rgba(6, 182, 212, 0.05);
+        }
+        
+        .btn-content-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 112px; /* Double the button height (56px * 2) */
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-text-main, .btn-text-hover {
+            height: 56px; /* Each segment is the button height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 16px 24px;
+        }
+        
+        .btn-text-hover {
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .btn-secondary:hover .btn-content-wrapper {
+            transform: translateY(-56px); /* Slides up exactly one segment (56px) */
+        }
+        /* End MODIFIED */
+
+        .refresh-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: auto;
+            width: fit-content;
+            padding: 8px;
+            border-radius: 6px;
+        }
+        
+        .refresh-btn:hover {
+            color: var(--text-main);
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* Features Row */
+        .features-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .feature-item {
+            padding: 25px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            color: var(--secondary);
+            background: rgba(139, 92, 246, 0.1);
+            padding: 12px;
+            border-radius: 10px;
+        }
+
+        .feature-content h4 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .feature-content p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .privacy-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background: rgba(0,0,0,0.3);
+            padding: 6px 12px;
+            border-radius: 50px;
+            margin-top: 15px;
+        }
+
+        /* --- NEW: Footer Style --- */
+        footer {
+            width: 100%;
+            padding: 30px 20px;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .footer-link:hover {
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+        /* End NEW: Footer Style */
+
+        /* Mobile Responsive */
+        @media (max-width: 850px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .data-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glow-orb"></div>
+
+    <div class="main-container">
+        <div class="top-controls">
+            <button class="theme-toggle" id="themeToggle" title="Toggle Light/Dark Mode">
+                <i class="fas fa-sun"></i>
+            </button>
+        </div>
+        
+        <header class="header">
+            <span class="badge"><i class="fas fa-shield-virus"></i> AI Shield v2.0</span>
+            <h1>Hybrid Phishing Shield</h1>
+            <p class="subtitle">Next-generation threat intelligence powered by ensemble learning models. 
+            Real-time analysis of URLs, SSL certificates, and digital footprints.</p>
+        </header>
+
+        <div class="dashboard-grid">
+            
+            <div class="glass-card scanner-card">
+                <div class="scan-line"></div>
+                <div class="scanner-header">
+                    <div class="scanner-title">
+                        <i class="fas fa-satellite-dish" style="color: var(--primary);"></i>
+                        <span>Client Connection Intel</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="status-dot"></span>
+                        <span style="font-size: 0.8rem; color: var(--success);">System Online</span>
+                    </div>
+                </div>
+
+                <div class="data-grid">
+                    <div class="data-item">
+                        <span class="label">IP Address</span>
+                        <div class="value loading" id="ipAddress">Initializing...</div>
+                    </div>
+                    <div class="data-item">
+                        <span class="label">ISP / Org</span>
+                        <div class="value loading" id="isp">Initializing...</div>
+                    </div>
+                    <div class="data-item">
+                        <span class="label">Geo Location</span>
+                        <div class="value loading" id="location">Initializing...</div>
+                    </div>
+                    <div class="data-item">
+                        <span class="label">Coordinates</span>
+                        <div class="value loading" id="coordinates">Initializing...</div>
+                    </div>
+                    <div class="data-item">
+                        <span class="label">Country Code</span>
+                        <div class="value loading" id="country">...</div>
+                    </div>
+                    <div class="data-item">
+                        <span class="label">Timezone</span>
+                        <div class="value loading" id="timezone">...</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px;">
+                    <div class="privacy-pill">
+                        <i class="fas fa-lock"></i>
+                        <span>Data processed locally. Log-free.</span>
+                    </div>
+                    <button class="refresh-btn" onclick="refreshData()">
+                        <i class="fas fa-sync-alt" id="refreshIcon"></i> Refresh Data
+                    </button>
+                </div>
+            </div>
+
+            <div class="glass-card actions-card">
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <h3 style="margin-bottom: 5px;">Ready to Scan?</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">Analyze suspicious URLs instantly.</p>
+                </div>
+                
+                <a href="/login" class="btn btn-primary">
+                    <i class="fas fa-radar"></i> Launch Detector
+                </a>
+                
+                <a href="/register" class="btn btn-secondary">
+                    <div class="btn-content-wrapper">
+                        <div class="btn-text-main">
+                            <i class="fas fa-user-shield"></i> Create Account
+                        </div>
+                        <div class="btn-text-hover">
+                            to check phishing websites
+                        </div>
+                    </div>
+                </a>
+
+                <div style="border-top: 1px solid var(--border); padding-top: 20px; margin-top: 10px;">
+                    <div style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.8rem;">
+                        <span>Engine Status</span>
+                        <span style="color: var(--success);">Operational</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.8rem; margin-top: 8px;">
+                        <span>Model Accuracy</span>
+                        <span style="color: var(--primary);">98.4%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="features-row">
+            <div class="feature-item">
+                <div class="feature-icon"><i class="fas fa-brain"></i></div>
+                <div class="feature-content">
+                    <h4>Ensemble Learning</h4>
+                    <p>Combined power of Random Forest, XGBoost, and CNNs to detect zero-day phishing attacks.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon"><i class="fas fa-fingerprint"></i></div>
+                <div class="feature-content">
+                    <h4>Digital Fingerprinting</h4>
+                    <p>Advanced heuristics analyze DOM structure, SSL validity, and visual similarity matching.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                <div class="feature-content">
+                    <h4>Real-Time Threat Feed</h4>
+                    <p>Live database updates prevent users from accessing newly registered malicious domains.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-links">
+            <a href="https://himel-profile-showcase.lovable.app" target="_blank" class="footer-link">
+                <i class="fas fa-info-circle"></i> About Us
+            </a>
+            <a href="https://www.facebook.com/iamibnsinahimel" target="_blank" class="footer-link">
+                <i class="fab fa-facebook"></i> Contact Us
+            </a>
+            <a href="https://ibnsinahimel.blogspot.com/search/label/android%20studio%20program?&max-results=5" target="_blank" class="footer-link">
+                <i class="fas fa-globe"></i> Website
+            </a>
+        </div>
+    </footer>
+    <script>
+        // --- Theme Toggle Logic ---
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        const body = document.body;
+
+        // Check local storage for preference
+        if (localStorage.getItem('theme') === 'light') {
+            enableLightMode();
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (body.classList.contains('light-mode')) {
+                disableLightMode();
+            } else {
+                enableLightMode();
+            }
+        });
+
+        function enableLightMode() {
+            body.classList.add('light-mode');
+            themeIcon.classList.replace('fa-sun', 'fa-moon');
+            localStorage.setItem('theme', 'light');
+        }
+
+        function disableLightMode() {
+            body.classList.remove('light-mode');
+            themeIcon.classList.replace('fa-moon', 'fa-sun');
+            localStorage.setItem('theme', 'dark');
+        }
+        // --- End Theme Toggle Logic ---
+
+
+        // --- IP Detection Logic ---
+        const ipServices = [
+            { name: 'ipapi.co', url: 'https://ipapi.co/json/', detailed: true },
+            { name: 'ipinfo.io', url: 'https://ipinfo.io/json', detailed: true },
+            { name: 'geolocation-db', url: 'https://geolocation-db.com/json/', detailed: true },
+            { name: 'ipify', url: 'https://api.ipify.org?format=json', detailed: false }
+        ];
+
+        async function init() {
+            await getUserInfo();
+        }
+
+        async function refreshData() {
+            const icon = document.getElementById('refreshIcon');
+            icon.style.transform = 'rotate(360deg)';
+            
+            // Visual reset
+            document.querySelectorAll('.value').forEach(el => {
+                el.classList.add('loading');
+                el.textContent = 'Scanning...';
+            });
+
+            await getUserInfo();
+            
+            setTimeout(() => {
+                icon.style.transform = 'rotate(0deg)';
+            }, 500);
+        }
+
+        async function getUserInfo() {
+            for (const service of ipServices) {
+                try {
+                    const response = await fetch(service.url);
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (service.detailed) {
+                            updateUI(data);
+                            return;
+                        } else {
+                            // If simple IP detected, fetch details separately
+                            document.getElementById('ipAddress').textContent = data.ip;
+                            document.getElementById('ipAddress').classList.remove('loading');
+                            await getDetailedInfo(data.ip);
+                        }
+                        return;
+                    }
+                } catch (error) {
+                    continue; // Try next service
+                }
+            }
+            // Fallback if all fail
+            document.querySelectorAll('.value').forEach(el => el.textContent = 'Unavailable');
+        }
+
+        async function getDetailedInfo(ip) {
+            try {
+                const res = await fetch(`https://ipapi.co/${ip}/json/`);
+                const data = await res.json();
+                updateUI(data);
+            } catch (e) {
+                console.log('Detailed lookup failed');
+            }
+        }
+
+        function updateUI(data) {
+            // Normalizing data fields across different APIs
+            const ip = data.ip || data.IPv4;
+            const city = data.city;
+            const region = data.region || data.state;
+            const country = data.country_name || data.country;
+            const org = data.org || data.isp;
+            const lat = data.latitude || (data.loc ? data.loc.split(',')[0] : null);
+            const lon = data.longitude || (data.loc ? data.loc.split(',')[1] : null);
+
+            setText('ipAddress', ip);
+            setText('isp', org);
+            setText('location', `${city}, ${region}`);
+            setText('country', data.country_code || country);
+            setText('timezone', data.timezone || 'N/A');
+            setText('coordinates', lat && lon ? `${lat}, ${lon}` : 'N/A');
+        }
+
+        function setText(id, value) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = value || 'Unknown';
+                el.classList.remove('loading');
+                // Add a small flash effect
+                el.style.color = '#fff';
+                setTimeout(() => el.style.color = 'var(--primary)', 300);
+            }
+        }
+
+        // Start on load
+        window.addEventListener('DOMContentLoaded', init);
+        // --- End IP Detection Logic ---
+    </script>
+</body>
+</html>
